@@ -1,0 +1,14 @@
+drupalGigya:
+  version: VERSION
+  js:
+    js/gigyaHelper.js: {}
+    js/gigya.js: {}
+  css:
+    component:
+      css/gigya.css: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax

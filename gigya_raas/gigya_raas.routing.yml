@@ -1,0 +1,60 @@
+gigya.raas.screensets.form:
+  path: '/admin/config/gigya/screensets'
+  defaults:
+    _form: 'Drupal\gigya_raas\Form\GigyaScreenSetsForm'
+    _title: 'Gigya screen-set settings'
+  requirements:
+    _permission: 'gigya major admin'
+
+gigya.raas.login:
+  path: 'gigya/raas-login'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasLoginAjax'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
+gigya.raas.logout:
+  path: 'gigya/raas-logout'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasLogoutAjax'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
+gigya.raas.profile:
+  path: 'gigya/raas-profile-update'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasProfileAjax'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
+gigya.raas.process.fieldmapping:
+  path: 'gigya/raas-process-fieldmapping'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasProcessFieldMapping'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
+gigya.raas.extcookie:
+  path: 'gigya/extcookie'
+  defaults:
+    _controller: '\Drupal\gigya_raas\GigyaController::gigyaRaasExtCookieAjax'
+  options:
+    _theme: ajax_base_page
+  requirements:
+    _permission: 'access content'
+
+gigya.raas.config:
+  path: '/admin/config/gigya/raas/session'
+  defaults:
+    _form: 'Drupal\gigya_raas\Form\GigyaSessionForm'
+    _title: 'Gigya RaaS Session Settings'
+  requirements:
+    _permission: 'gigya major admin'

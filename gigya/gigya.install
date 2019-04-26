@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Installation functions for Gigya module.
+ */
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Database\Database;
+/**
+ * Implements hook_install.
+ */
+function gigya_install() {
+
+}
+
+function gigya_uninstall() {
+
+}
