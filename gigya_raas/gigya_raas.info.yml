@@ -1,0 +1,18 @@
+name: Gigya RaaS
+type: module
+description: 'Gigya RaaS module'
+package: Gigya
+# core: 8.x
+dependencies:
+  - gigya
+# Information added by Drupal.org packaging script on 2016-06-20
+# version: '8.x-1.0'
+# core: '8.x'
+# project: 'gigya'
+# datestamp: 1466432041
+
+# Information added by Drupal.org packaging script on 2017-02-21
+version: '8.x-1.4'
+core: '8.x'
+project: 'gigya'
+datestamp: 1487718187
