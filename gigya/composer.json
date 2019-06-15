@@ -12,10 +12,10 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/gigya/php_cms_kit"
+      "url": "https://github.com/phamthanhnhan/cms-starter-kit.git"
     }
   ],
   "require": {
-    "gigya/cms-starter-kit": "^1.1.2"
+    "gigya/cms-starter-kit": "dev-master"
   }
 }
