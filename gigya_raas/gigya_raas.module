@@ -1,43 +1,106 @@
 <?php
+
+use Drupal\block\BlockInterface;
+use Drupal\block\Entity\Block;
 use Drupal\gigya\Helper\GigyaHelper;
 
 /**
  * Implements hook_page_attachments().
+ *
  * @param array $attachments
  */
 function gigya_raas_page_attachments(array &$attachments) {
-  // Add Settings.
   $api_key = \Drupal::config('gigya.settings')->get('gigya.gigya_api_key');
+
   if (!empty($api_key)) {
-    $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get('gigya.enableRaaS');
+    $attachments['#attached']['drupalSettings']['gigya']['enableRaaS'] = \Drupal::config('gigya.global')->get(
+      'gigya.enableRaaS'
+    );
 
     if (\Drupal::config('gigya.global')->get('gigya.enableRaaS') == TRUE) {
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['loginRedirect'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.login_redirect');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['logoutRedirect'] = \Drupal::config('gigya_raas.settings')->get('gigya_raas.logout_redirect');
       $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = \Drupal::currentUser()->isAuthenticated();
+
+      $session_type = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_type');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_type'] =  $session_type;
+
+      $session_time = \Drupal::config('gigya_raas.settings')->get('gigya_raas.session_time');
+      $attachments['#attached']['drupalSettings']['gigyaExtra']['session_time'] =  $session_time;
+
+      /* Get sessionExpiration from Raas settings and set globalParameters with the value */
+      $expiration = $session_type == "dynamic" ? -1 : $session_time;
+
+      $global_params = \Drupal::config('gigya.global')->get('gigya.globalParameters');
+      $global_params['sessionExpiration'] = $expiration;
+      $attachments['#attached']['drupalSettings']['gigya']['globalParameters'] = $global_params;
+
+			$default_login_screenset = 'Default-RegistrationLogin';
+			$default_profile_screenset = 'Default-ProfileUpdate';
+			$default_profile_screenset_mobile = 'Default-ProfileUpdate';
+			$login_screenset = \Drupal::config('gigya_raas.screensets')->get('gigya.login_screenset');
+			$profile_screenset = \Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset');
+			$profile_screenset_mobile = \Drupal::config('gigya_raas.screensets')->get('gigya.profile_screenset_mobile');
+
       if (\Drupal::currentUser()->isAnonymous()) {
-        $raas_login = array(
-          'screenSet' =>  'Default-RegistrationLogin',
+        $raas_login    = array(
+          'screenSet'       => $login_screenset ?: $default_login_screenset,
           'mobileScreenSet' => '',
-          'startScreen' => 'gigya-login-screen',
+          'startScreen'     => 'gigya-login-screen',
+          'sessionExpiration' => $expiration,
         );
         $raas_register = array(
-          'screenSet' => 'Default-RegistrationLogin',
+          'screenSet'       => $login_screenset ?: $default_login_screenset,
           'mobileScreenSet' => '',
-          'startScreen' => 'gigya-register-screen',
+          'startScreen'     => 'gigya-register-screen',
+          'sessionExpiration' => $expiration,
         );
         \Drupal::moduleHandler()->alter('gigya_raas_settings', $raas_login, $raas_register);
-        $attachments['#attached']['drupalSettings']['gigya']['raas']['login'] = $raas_login;
+        $attachments['#attached']['drupalSettings']['gigya']['raas']['login']    = $raas_login;
         $attachments['#attached']['drupalSettings']['gigya']['raas']['register'] = $raas_register;
-        $attachments['#attached']['drupalSettings']['gigyaExtra'] = array('isLogin' => FALSE);
+        $attachments['#attached']['drupalSettings']['gigyaExtra']['isLogin'] = FALSE;
       }
       else {
-        $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission('bypass gigya raas');
+        $attachments['#attached']['drupalSettings']['gigyaExtra']['bypassRaas'] = Drupal::currentUser()->hasPermission(
+          'bypass gigya raas'
+        );
         $raas_profile = array(
-          'screenSet' =>  'Default-ProfileUpdate',
-          'mobileScreenSet' => 'DefaultMobile-ProfileUpdate'
+          'screenSet'       => $profile_screenset ?: $default_profile_screenset,
+          'mobileScreenSet' => $profile_screenset_mobile ?: $default_profile_screenset_mobile,
         );
         \Drupal::moduleHandler()->alter('gigya_raas_profile_settings', $raas_profile);
         $attachments['#attached']['drupalSettings']['gigya']['raas']['profile'] = $raas_profile;
       }
+
+      /* Load screen-set config into front-end for custom screen-set in UI blocks functionality */
+      $custom_screensets = array();
+			/** @var BlockInterface[] $blocks; */
+			$blocks = Block::loadMultiple();
+			foreach ($blocks as $key => $block) {
+				$settings = $block->get('settings');
+				if ($settings['id'] == 'gigya_raas_custom_screenset') {
+					$custom_screensets[] = $settings;
+				}
+			}
+			$screenset_config = (array)json_decode(\Drupal::config('gigya_raas.screensets')->get('gigya.custom_screensets'));
+			foreach ($screenset_config as $key => $screenset) {
+				if (isset($screenset->remove))
+					unset($screenset->remove);
+				$screenset = (array)$screenset;
+				$screenset_config[$screenset['desktop']] = $screenset;
+				unset($screenset_config[$key]);
+			}
+			foreach ($custom_screensets as $key => $screenset) {
+				if (!empty($screenset_config[$screenset['desktop_screenset']])) {
+					$custom_screensets[$key]['sync_data'] = $screenset_config[$screenset['desktop_screenset']]['sync'];
+					if (!empty($screenset_config[$screenset['desktop_screenset']]['mobile']))
+						$custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['mobile'];
+					else
+						$custom_screensets[$key]['mobile_screenset'] = $screenset_config[$screenset['desktop_screenset']]['desktop'];
+				}
+			}
+			$attachments['#attached']['drupalSettings']['gigya']['raas']['customScreenSets'] = $custom_screensets;
+
       $attachments['#attached']['library'][] = 'gigya_raas/gigyaRaas';
     }
   }
@@ -48,18 +111,21 @@ function gigya_raas_page_attachments(array &$attachments) {
  */
 function gigya_raas_theme($existing, $type, $theme, $path) {
   return array(
-    'gigya_raas_links_block' => array(
+    'gigya_raas_links_block'    => array(
       'variables' => array('links' => NULL, 'title' => NULL),
     ),
-    'gigya_raas_login_block' => array(
+    'gigya_raas_login_block'    => array(
       'variables' => array('showDiv' => NULL),
     ),
     'gigya_raas_register_block' => array(
       'variables' => array('showDiv' => NULL),
     ),
-    'gigya_raas_profile_block' => array(
+    'gigya_raas_profile_block'  => array(
       'variables' => array('showDiv' => NULL),
-    )
+    ),
+		'gigya_raas_custom_screenset_block' => array(
+			'variables' => array('title' => NULL, 'link' => NULL, 'display_type' => NULL, 'container_id' => NULL, 'screenset' => NULL),
+		),
   );
 }
 

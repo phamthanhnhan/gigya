@@ -25,14 +25,12 @@ function hook_gigya_raas_settings_alter(array &$raas_login, array &$raas_registe
 /**
  * Modify the data gigya_global_parameters before it is added to the js.
  *
- * @param $gigya_global_parameters
+ * @param $raas_profile
  *   An field map arrays.
  */
 function hook_gigya_raas_profile_settings_alter(array &$raas_profile) {
   $raas_profile['screenSet'] = 'Default-ProfileUpdate';
 }
-
-
 
 /**
  * @} End of "addtogroup hooks".
